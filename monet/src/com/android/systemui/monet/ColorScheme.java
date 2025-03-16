@@ -68,7 +68,11 @@ public class ColorScheme {
 
     public ColorScheme(@ColorInt int seed, boolean isDark, @ThemeStyle.Type int style,
             double contrastLevel) {
+        this(seed, isDark, style, contrastLevel, 1f, 1f, false, true);
+    }
 
+    public ColorScheme(@ColorInt int seed, boolean isDark, @ThemeStyle.Type int style, double contrastLevel,
+            float luminanceFactor, float chromaFactor, boolean wholePalette, boolean tintBackground) {
         this.mSeed = seed;
         this.mIsDark = isDark;
         this.mStyle = style;
@@ -97,11 +101,20 @@ public class ColorScheme {
             default -> throw new IllegalArgumentException("Unknown style: " + style);
         };
 
-        mAccent1 = new TonalPalette(mMaterialScheme.primaryPalette);
-        mAccent2 = new TonalPalette(mMaterialScheme.secondaryPalette);
-        mAccent3 = new TonalPalette(mMaterialScheme.tertiaryPalette);
-        mNeutral1 = new TonalPalette(mMaterialScheme.neutralPalette);
-        mNeutral2 = new TonalPalette(mMaterialScheme.neutralVariantPalette);
+        final DynamicScheme bgScheme = tintBackground ? mMaterialScheme
+                : new SchemeMonochrome(seedHct, isDark, contrastLevel);
+
+        mAccent1 = new TonalPalette(mMaterialScheme.primaryPalette, luminanceFactor, chromaFactor);
+        mAccent2 = new TonalPalette(mMaterialScheme.secondaryPalette,
+                wholePalette ? luminanceFactor : 1f,
+                wholePalette ? chromaFactor : 1f);
+        mAccent3 = new TonalPalette(mMaterialScheme.tertiaryPalette, luminanceFactor, chromaFactor);
+        mNeutral1 = new TonalPalette(bgScheme.neutralPalette,
+                tintBackground ? luminanceFactor : 1f,
+                tintBackground ? chromaFactor : 1f);
+        mNeutral2 = new TonalPalette(bgScheme.neutralVariantPalette,
+                tintBackground && wholePalette ? luminanceFactor : 1f,
+                tintBackground && wholePalette ? chromaFactor : 1f);
         mError = new TonalPalette(mMaterialScheme.errorPalette);
     }
 
